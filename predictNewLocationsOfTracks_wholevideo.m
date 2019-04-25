@@ -15,7 +15,8 @@ for i = 1:length(tracks)
     
     % Shift the bounding box so that its center is at
     % the predicted location.
-    predictedCentroid = int32(predictedCentroid) - bbox(3:4) / 2;
+%     predictedCentroid = int32(predictedCentroid) - bbox(3:4) / 2;
+    predictedCentroid = predictedCentroid - bbox(3:4)/2;
     tracks(i).centroid = [tracks(i).centroid ; predictedCentroid]; %not sure why these predictions even need to go into the log...
     bbox_upToNow = tracks(i).bbox;
     predictedBbox = [predictedCentroid, bbox(3:4)];

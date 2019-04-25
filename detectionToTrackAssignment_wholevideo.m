@@ -34,7 +34,7 @@
 % 1-12-17
 % borrowed from MultipleObjectTracking example
 
-function [assignments, unassignedTracks, unassignedDetections] = detectionToTrackAssignment_wholevideo(tracks,centroids,singleworm)
+function [assignments, unassignedTracks, unassignedDetections] = detectionToTrackAssignment_wholevideo(tracks,centroids)
 
 nTracks = length(tracks);
 nDetections = size(centroids, 1);
@@ -54,21 +54,17 @@ for i = 1:nTracks
     lastpos(i,:) = tracks(i).centroid(end,:); %this is the kalman prediction
 end
 euc_dist = pdist2(lastpos,centroids,'euclidean');
-if singleworm
-    [d_i, d_j] = find(euc_dist>250);
-else
-    [d_i, d_j] = find(euc_dist>50);
-end
+
+[d_i, d_j] = find(euc_dist>250);
+
 ind2replace = sub2ind(size(cost),d_i,d_j);
 cost(ind2replace) = Inf;
 
 % Solve the assignment problem.
-if singleworm
-    costOfNonAssignment = 50; %50 - this is good for single animal.
-else
-    costOfNonAssignment = 10;% should be more like 10 for multiple animals
-end
+costOfNonAssignment = 50; %50 - this is good for single animal.
+
  
 [assignments, unassignedTracks, unassignedDetections] = assignDetectionsToTracks(cost, costOfNonAssignment); %built-in method
+
 end
 

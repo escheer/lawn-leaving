@@ -15,10 +15,10 @@ fclose(fileID);
 v = VideoReader([pathname filename]);
 number_of_frames = v.NumberOfFrames;
 
-uncropped_vid = [filename(1:end-12) '.avi'];
-tmpVid = VideoReader([pathname uncropped_vid]);
-f1 = im2double(read(tmpVid,1));
-imshow(f1);
+% uncropped_vid = [filename(1:end-12) '.avi'];
+% tmpVid = VideoReader([pathname uncropped_vid]);
+% f1 = im2double(read(tmpVid,1));
+% imshow(f1);
 maxwormnumber = input('Tell me the number of worms in the video!\n');
 close all;
 % clear tmpVid;
@@ -71,31 +71,63 @@ close all;
 
 
 %% get the event horizon from the background image
-backgthresh = multithresh(background,2);
-imshow(im2bw(background,backgthresh(2)))
-bggood = input('Is thresholded background good? (1/0) \n');
-if bggood
-    bglevel = backgthresh(2);
-else
-    imshow(im2bw(background,backgthresh(1)))
-    lastchance = input('How about now? (1/0) \n');
-    if lastchance
-        bglevel = backgthresh(1);
-    else
-        error('problem getting background threshold!')
-    end
-end
-threshbg = im2bw(background,bglevel);
-threshbg = bwareaopen(threshbg,1000);
-[B,~,N] = bwboundaries(threshbg,'noholes');
-if N > 1
-    imshow(threshbg); hold on;
-    pause();
-    error('there can only be one lawn!');
-end
-boundary = B{1};
-ev_ho_x = boundary(:,2);
-ev_ho_y = boundary(:,1);
+%%%%%%%%%%%%%%%%%%%%%%%%%% OLD METHOD changed 07/21/17 
+% backgthresh = multithresh(background,2);
+% imshow(im2bw(background,backgthresh(2)))
+% bggood = input('Is thresholded background good? (1/0) \n');
+% if bggood
+%     bglevel = backgthresh(2);
+% else
+%     imshow(im2bw(background,backgthresh(1)))
+%     lastchance = input('How about now? (1/0) \n');
+%     if lastchance
+%         bglevel = backgthresh(1);
+%     else
+%         error('problem getting background threshold!')
+%     end
+% end
+% threshbg = im2bw(background,bglevel);
+% threshbg = bwareaopen(threshbg,1000);
+% [B,~,N] = bwboundaries(threshbg,'noholes');
+% if N > 1
+%     imshow(threshbg); hold on;
+%     pause();
+%     error('there can only be one lawn!');
+% end
+% boundary = B{1};
+% ev_ho_x = boundary(:,2);
+% ev_ho_y = boundary(:,1);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% NEW METHOD changed 07/21/17 -- works better when the lawn boundary is
+%harder to see -- uses a different edge detection technique
+
+%start with background image, background
+BW = edge(background,'canny');
+BW2 = bwareaopen(BW,50); %get rid of schmutz
+[edge_y, edge_x] = find(BW2);
+
+imshow(BW2); hold on;
+%select the region in which to find the boundary
+H = imfreehand;
+Position = wait(H);
+pos_x = Position(:,1); pos_y = Position(:,2);
+
+%find those edge pixels which fall inside the polygon specified by
+%imfreehand
+in = inpolygon(edge_x,edge_y,pos_x,pos_y);
+scatter(edge_x(in),edge_y(in),10,'b'); %these points are inside the drawn polygon;
+inside_x = edge_x(in);
+inside_y = edge_y(in);
+
+%calculate the convex hull of these points to get the lawn boundary.
+K = convhull(inside_x,inside_y);
+scatter(inside_x(K), inside_y(K),25,'r+');
+
+ev_ho_x = inside_x(K); ev_ho_y = inside_y(K);
+close all;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 imshow(background); hold on;
 scatter(ev_ho_x,ev_ho_y,'g+');
 pause();
@@ -138,9 +170,9 @@ if singleworm %javier's setup
     hblob.MinimumBlobArea = 400;
     hblob.MaximumBlobArea = 2000;
 else
-    hblob.MaximumCount = 100;
-    hblob.MinimumBlobArea = 80;
-    hblob.MaximumBlobArea = 200;
+    hblob.MaximumCount = maxwormnumber;
+    hblob.MinimumBlobArea = 400; %was 70 on 12 mm
+    hblob.MaximumBlobArea = 2000; %was 300 on 12 mm
 end
 
 
@@ -242,7 +274,7 @@ while hasFrame(v2) %main loop
     cropped = imcrop(masked,region_rounded);
     bgsub = (imcomplement(cropped - background));
     thresh = imcomplement(im2bw(bgsub,level));
-    thresh_cleaned = bwareaopen(thresh,50);
+    thresh_cleaned = bwareaopen(thresh,80);
     [~, centroids, bboxes] = step(hblob,thresh_cleaned); %image coordinates
     
     tracks = predictNewLocationsOfTracks_wholevideo(tracks);

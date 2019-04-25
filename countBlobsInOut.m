@@ -7,35 +7,47 @@
 % will be many multiblobs inside. The number of blobs outside can be used
 % to calculate an aversion ratio if the total number of animals in the
 % video is known.
-function [blobs_in,blobs_out] = countBlobsInOut(tracks,tracksThatLeft,ev_ho_x, ev_ho_y, last_frame_idx )
-x = ev_ho_x';
-y = ev_ho_y';
 
-tracksToCheck = [tracks, tracksThatLeft]; %merge tracks and tracksThatLeft
+function [headinlawn, centroidinlawn, tailinlawn, fullyinlawn] = countBlobsInOut(track, bg_struct)
+bgvidindex = track.bgvidindex;  %this is the index key to knowing which event horizon was active at a particular frame
 
-blobs_in = zeros(1,last_frame_idx);
-blobs_out = zeros(1,last_frame_idx);
+bbox = track.bbox;
+bbox_verts =   [[bbox(:,1) bbox(:,2)]...          % top left
+    [bbox(:,1) bbox(:,2)+bbox(:,4)]...            % bottom left
+    [bbox(:,1)+bbox(:,3) bbox(:,2)]...            % top right
+    [bbox(:,1)+bbox(:,3) bbox(:,2)+bbox(:,4)]];   % bottom right
 
-for i = 1:length(tracksToCheck)
-    firstframe = tracksToCheck(i).framesActive(1);
+topleft_in = zeros(track.age,1);
+bottomleft_in = zeros(track.age,1);
+topright_in = zeros(track.age,1);
+bottomright_in = zeros(track.age,1);
+
+headinlawn = zeros(track.age,1);
+centroidinlawn = zeros(track.age,1);
+tailinlawn = zeros(track.age,1);
+
+for i = 1:track.age
+    ev_ho = bg_struct(bgvidindex(i)).ev_ho_crp_rel; %get the event horizon that corresponds to this frame of the video
+    x = ev_ho(:,1); y = ev_ho(:,2);
     
-    bbox = tracksToCheck(i).bbox;
-    bbox_verts =   [[bbox(:,1) bbox(:,2)]...          % top left
-        [bbox(:,1) bbox(:,2)+bbox(:,4)]...            % bottom left
-        [bbox(:,1)+bbox(:,3) bbox(:,2)]...            % top right
-        [bbox(:,1)+bbox(:,3) bbox(:,2)+bbox(:,4)]];   % bottom right
+    topleft_in(i) = inpolygon(double(bbox_verts(i,1)),double(bbox_verts(i,2)),x,y);
+    bottomleft_in(i) = inpolygon(double(bbox_verts(i,3)),double(bbox_verts(i,4)),x,y);
+    topright_in(i) = inpolygon(double(bbox_verts(i,5)),double(bbox_verts(i,6)),x,y);
+    bottomright_in(i) = inpolygon(double(bbox_verts(i,7)),double(bbox_verts(i,8)),x,y);
+
     
-    topleft_out = ~inpolygon(double(bbox_verts(:,1)),double(bbox_verts(:,2)),x,y);
-    bottomleft_out = ~inpolygon(double(bbox_verts(:,3)),double(bbox_verts(:,4)),x,y);
-    topright_out = ~inpolygon(double(bbox_verts(:,5)),double(bbox_verts(:,6)),x,y);
-    bottomright_out = ~inpolygon(double(bbox_verts(:,7)),double(bbox_verts(:,8)),x,y);
-    
-    bboxes_out = find(topleft_out&bottomleft_out&topright_out&bottomright_out)+firstframe-1; %frame indices
-    bboxes_in = find(~topleft_out&~bottomleft_out&~topright_out&~bottomright_out)+firstframe-1; %frame indices
-    
-    %increment in count and outcount for every frame on the list
-    blobs_in(bboxes_in) = blobs_in(bboxes_in)+1;
-    blobs_out(bboxes_out) = blobs_out(bboxes_out)+1;
+    headinlawn(i) = inpolygon(track.head(i,1),track.head(i,2),x,y);
+    centroidinlawn(i) = inpolygon(track.centroid(i,1),track.centroid(i,2),x,y);
+    tailinlawn(i) = inpolygon(track.tail(i,1),track.tail(i,2),x,y);
+end
+%wherever the worm's bounding box is fully inside the lawn, set to 1
+fullyinlawn = topleft_in&bottomleft_in&topright_in&bottomright_in;
+
+headinlawn = logical(headinlawn);
+centroidinlawn = logical(centroidinlawn);
+tailinlawn = logical(tailinlawn);
+fullyinlawn = logical(fullyinlawn);
+
 end
 
 
@@ -65,9 +77,3 @@ end
 
 
 
-
-
-
-
-
-end

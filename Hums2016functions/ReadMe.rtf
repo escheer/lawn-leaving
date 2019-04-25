@@ -1,0 +1,75 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1348\cocoasubrtf170
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww15800\viewh15600\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+
+\f0\b\fs24 \cf0 WormAngles\
+
+\b0 script RunAllSkeletons runs through all the codes to calculate angle time series of worm images \
+(which are stored in the Parallel WormTracker format with additional modification to save binary images)\
+save data per experiment as WormGeomTracks.\
+Steps:\
+- FindAllWormSkeletonsFromTracks\
+  calculates the skeletons from binary worm images from tracks_als files.\
+- correctAngles\
+  smoothes skeleton, divides skeleton into segments of equal arc length and calculates angles in rad.\
+- HeadAssign;\
+  finds head coordinates of worm.\
+- skel_order;\
+  orders skeleton from head to tail and fixes left-right flips. \
+
+\b \
+\
+EigenwormDecomposition\
+
+\b0 includes the following main scripts:\
+\
+- GetEigenworm_fromCombinedTracks\
+  calculates eigenworms from input angle time series (from format: WormGeomTracks)\
+\
+- EigenWormProjectiosScript_ontoFixedEWs\
+  projects angle time series onto input eigenworms and outputs time series of undulation mode and turning mode per track,\
+  saves them as EigenWormTracks; \
+  calculates matrices of body, undulation and turning amplitudes;\
+  saves data from all experiments.\
+\
+- EigenWormProjectiosScript_fixedEWs_forGradients_PerFile\
+  projects angle time series onto input eigenworms and outputs time series of undulation mode and turning mode per track,\
+  also saves body posture (= raw angle data)\
+  saves data per experiment as EigenWormTracks.\
+  Input for GradientAnalysis/ TurningMode/ BodyTurningxBearing\
+\
+- EigenWormProjectiosScript_fxedEWs_PhaseSpeed\
+  calculates phase speed (= undulation frequency) by projecting angle time series onto input eigenworms.\
+\
+Further this folder includes the decomposition sub-functions performing the eigenworm calculations;\
+and other used sub-functions.\
+
+\b \
+\
+Eigenmovie
+\b0  \
+(main function: makeEigenMovie)\
+generates a movie showing an original video of a single worm from recorded assay \
+and kymographs of body posture, undulation mode and turning mode indicating frames of the original worm video.\
+Further reconstructs and animates worm shapes based on full body posture, undulation mode and turning mode.\
+\
+\
+
+\b GradientAnalysis\
+
+\b0 - TurningMode/ BodyTurningxBearing:\
+  finds body turning events and bins them over bearing.\
+- Weathervaning-Speed-Reversals:\
+  folder contains several scripts binning reversal rate, speed or track curvature (=weathervaning) over bearing.
+\b \
+
+\b0 \
+\
+
+\b Used
+\b0  
+\b functions
+\b0 \
+contains mainly third party functions used within some of the codes.}

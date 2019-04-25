@@ -1,0 +1,34 @@
+Start the script: "RunAllSkeletons"
+This runs through all 4 codes to get from WormImages to angle time series per track.
+
+
+to set number of angles:
+
+-> you have to edit variable "numIP" in (2) "correctAngles_JRv1_IH1 in line 32  (or use it as a function)
+   numIP = number of wormpoints = number of angles +2  (there are two more wormpoints than angles)
+-> you can also edit the smoothing in line 38 if you want
+
+
+
+%%% (1)
+FindAllWormSkeletonsFromTracks;
+%%% Calculates the skeletons from binary worm images from tracks_als files.
+
+%%% (2)
+correctAngles;
+%%% Smoothes skeleton, divides skeleton into segments of equal arc length
+%%% and calculates angles in rad.
+%%% Set the number of wormpoints = numIP (number of angles + 2) (line 34);
+%%% Optionally, edit smoothpart (line 40), if you want to smooth the
+%%% skeleton less or more.
+
+%%% (3)
+HeadAssign;
+%%% Finds head coordinates of worm
+
+%%%(4)
+skel_order;
+%%% Orders skeleton from head to tail
+%%% and fixes left-right flips. 
+%%% Optionally, ajdust thresholds ("threshes" in line 7) in this script for correcting left-right
+%%% flips.
